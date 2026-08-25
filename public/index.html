@@ -297,7 +297,7 @@ document.getElementById('betForm').addEventListener('submit',e=>{
   e.preventDefault();
   if(!banks.length){alert('Cadastre uma casa primeiro.');return;}
   const bet={
-    id:uid(),date:date.value,bankId:betBank.value,event:event.value.trim(),market:market.value.trim(),
+    id:uid(),date:date.value,bankId:betBank.value,event:document.getElementById('event').value.trim(),market:market.value.trim(),
     units:Number(units.value||0),stake:Number(stake.value),odd:Number(odd.value),result:result.value,category:category.value
   };
   bets.unshift(bet); save(); e.target.reset();
