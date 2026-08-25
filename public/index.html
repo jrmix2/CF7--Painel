@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CF7 • Painel Online</title>
+<style>
+  :root{
+    --bg:#0b0f14;--card:#121821;--card2:#17202b;--text:#eef4fb;--muted:#8fa1b5;
+    --green:#29d17d;--red:#ff5d67;--yellow:#f1c75b;--blue:#5ea1ff;--border:#263242;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--text)}
+  .wrap{max-width:1180px;margin:auto;padding:18px}
+  header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
+  .brand h1{font-size:22px;margin:0}.brand p{color:var(--muted);margin:4px 0 0;font-size:13px}
+  button{border:0;border-radius:10px;padding:11px 14px;font-weight:700;cursor:pointer}
+  .primary{background:var(--green);color:#07120c}.secondary{background:var(--card2);color:var(--text);border:1px solid var(--border)}
+  .danger{background:#35161b;color:#ff9ba2;border:1px solid #6b252d}
+  .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:15px}
+  .metric small{color:var(--muted)} .metric strong{display:block;font-size:24px;margin-top:7px}
+  .green{color:var(--green)} .red{color:var(--red)} .yellow{color:var(--yellow)}
+  .section-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+  .section-title h2{font-size:17px;margin:0}
+  form{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  label{font-size:12px;color:var(--muted);display:block;margin-bottom:5px}
+  input,select{width:100%;padding:11px;border-radius:9px;border:1px solid var(--border);background:#0d131b;color:var(--text);outline:none}
+  .span2{grid-column:span 2}.span4{grid-column:1/-1}
+  .actions{display:flex;gap:8px;justify-content:flex-end}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:11px 9px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+  th{color:var(--muted);font-weight:600}
+  .table-wrap{overflow:auto}
+  .badge{padding:5px 8px;border-radius:999px;font-size:11px;font-weight:800}
+  .b-green{background:#123622;color:#6df0a8}.b-red{background:#3b171d;color:#ff8f97}.b-open{background:#332d13;color:#f2d36d}
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  .filters select,.filters input{width:auto;min-width:140px}
+  .empty{text-align:center;color:var(--muted);padding:28px}
+  .footer-note{color:var(--muted);font-size:12px;margin-top:12px}
+  .bank-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .bank-box{background:#0d131b;border:1px solid var(--border);border-radius:12px;padding:12px}
+  .bank-box b{display:block;margin-bottom:4px}.bank-box span{font-size:21px;font-weight:800}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  .chart-wrap{position:relative;height:260px;background:#0d131b;border:1px solid var(--border);border-radius:12px;padding:12px}
+  canvas{width:100%;height:100%}
+  .perf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .perf-box{background:#0d131b;border:1px solid var(--border);border-radius:12px;padding:12px}
+  .perf-box small{color:var(--muted);display:block;margin-bottom:5px}
+  .perf-box strong{font-size:20px}
+  .risk-note{font-size:12px;color:var(--muted);margin-top:6px}
+  .risk-alert{font-size:12px;color:var(--red);font-weight:700;margin-top:6px;display:none}
+  .goal-bar{height:10px;background:#0d131b;border:1px solid var(--border);border-radius:999px;overflow:hidden;margin-top:8px}
+  .goal-fill{height:100%;background:var(--green);width:0%}
+  .limit-box{margin-top:10px;padding:10px;border-radius:10px;background:#0d131b;border:1px solid var(--border);font-size:13px}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;padding:18px;z-index:999}
+  .modal-card{width:min(520px,100%);background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px}
+  .modal-card h3{margin:0 0 12px}
+  .upload-box{border:1px dashed var(--border);border-radius:12px;padding:14px;background:#0d131b}
+  .upload-box input[type=file]{padding:8px}
+  .preview{max-width:100%;max-height:320px;border-radius:10px;margin-top:10px;display:none}
+  .ai-status{margin-top:10px;font-size:13px;color:var(--muted)}
+  .ai-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  @media(max-width:600px){.ai-fields{grid-template-columns:1fr}}
+  @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.bank-grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:800px){
+    form{grid-template-columns:1fr 1fr}.span2{grid-column:span 2}.span4{grid-column:1/-1}
+    header{align-items:flex-start;flex-direction:column}
+  }
+  @media(max-width:700px){.perf-grid{grid-template-columns:1fr}}
+  @media(max-width:520px){.bank-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <h1>CF7 • Painel Online</h1>
+      <p>Bancas por casa, entradas, ganhos, perdas e movimentações</p>
+    </div>
+    <button class="secondary" onclick="exportCSV()">Exportar CSV</button>
+  </header>
+
+  <section class="grid">
+    <div class="card metric"><small>Banca total</small><strong id="bankTotal">R$ 0,00</strong></div>
+    <div class="card metric"><small>Lucro/Prejuízo</small><strong id="saldo">R$ 0,00</strong></div>
+    <div class="card metric"><small>Total apostado</small><strong id="apostado">R$ 0,00</strong></div>
+    <div class="card metric"><small>Taxa de acerto</small><strong id="hit">0%</strong></div>
+    <div class="card metric"><small>ROI</small><strong id="roi">0%</strong></div>
+  </section>
+
+  <section class="card" style="margin-bottom:18px">
+    <div class="section-title">
+      <h2>Minhas bancas</h2>
+      <button class="secondary" onclick="showBankForm()">+ Adicionar casa</button>
+    </div>
+    <div id="bankFormWrap" style="display:none;margin-bottom:12px">
+      <form id="bankForm">
+        <div class="span2"><label>Nome da casa</label><input id="bankName" placeholder="Ex.: Betano" required></div>
+        <div><label>Banca inicial (R$)</label><input id="bankInitial" type="number" min="0" step="0.01" required></div>
+        <div class="actions"><button type="submit" class="primary">Salvar casa</button></div>
+      </form>
+    </div>
+    <div id="bankGrid" class="bank-grid"></div>
+    <div id="bankEmpty" class="empty">Cadastre sua primeira casa de aposta.</div>
+  </section>
+
+  <section class="card" style="margin-bottom:18px">
+    <div class="section-title"><h2>Movimentação de banca</h2></div>
+    <form id="moveForm">
+      <div><label>Tipo</label>
+        <select id="moveType" onchange="toggleTransfer()">
+          <option value="deposit">Depósito</option>
+          <option value="withdraw">Saque</option>
+          <option value="transfer">Transferência</option>
+        </select>
+      </div>
+      <div><label>Casa</label><select id="moveBank" required></select></div>
+      <div id="toBankWrap" style="display:none"><label>Destino</label><select id="moveToBank"></select></div>
+      <div><label>Valor (R$)</label><input id="moveAmount" type="number" min="0.01" step="0.01" required></div>
+      <div class="span4 actions"><button type="submit" class="primary">Registrar movimentação</button></div>
+    </form>
+  </section>
+
+
+  <section class="card" style="margin-bottom:18px">
+    <div class="section-title"><h2>Gestão de banca</h2></div>
+    <form id="riskForm">
+      <div><label>Valor de 1 unidade (% da banca)</label><input id="unitPercent" type="number" min="0.1" max="100" step="0.1" value="1"></div>
+      <div><label>Risco máximo por aposta (%)</label><input id="maxRiskPercent" type="number" min="0.1" max="100" step="0.1" value="3"></div>
+      <div><label>Casa de referência</label><select id="riskBank"></select></div>
+      <div>
+        <label>1 unidade hoje</label>
+        <input id="unitValueDisplay" readonly>
+        <div class="risk-note">Calculado pela banca atual da casa escolhida.</div>
+      </div>
+      <div><label>Meta mensal de lucro (R$)</label><input id="monthlyGoal" type="number" min="0" step="0.01" value="0"></div>
+      <div><label>Limite de perda diária (R$)</label><input id="dailyLossLimit" type="number" min="0" step="0.01" value="0"></div>
+      <div class="span4">
+        <div class="limit-box">
+          <div><b>Progresso da meta mensal:</b> <span id="goalText">R$ 0,00 / R$ 0,00</span></div>
+          <div class="goal-bar"><div id="goalFill" class="goal-fill"></div></div>
+          <div id="dailyLimitStatus" class="risk-note"></div>
+        </div>
+      </div>
+      <div class="span4 actions"><button type="button" class="primary" onclick="saveRiskSettings()">Salvar gestão</button></div>
+    </form>
+  </section>
+<section class="card" style="margin-bottom:18px">
+    <div class="section-title"><h2>Nova aposta</h2></div>
+    <form id="betForm">
+      <div><label>Data</label><input type="date" id="date" required></div>
+      <div><label>Casa</label><select id="betBank" required></select></div>
+      <div class="span2"><label>Evento / Jogo</label><input id="event" placeholder="Ex.: Palmeiras x Vasco" required></div>
+      <div><label>Mercado</label><input id="market" placeholder="Ex.: Mais de 1.5 gols" required></div>
+      <div><label>Unidades</label><input id="units" type="number" min="0.1" step="0.1" value="1"></div>
+      <div><label>Stake (R$)</label><input id="stake" type="number" min="0.01" step="0.01" required><div id="riskAlert" class="risk-alert">⚠ Stake acima do risco máximo definido.</div></div>
+      <div><label>Odd</label><input id="odd" type="number" min="1.01" step="0.01" required></div>
+      <div><label>Resultado</label>
+        <select id="result">
+          <option value="open">Em aberto</option>
+          <option value="green">Green</option>
+          <option value="red">Red</option>
+          <option value="void">Anulada</option>
+        </select>
+      </div>
+      <div><label>Categoria</label>
+        <select id="category"><option>Futebol</option><option>Basquete</option><option>Tênis</option><option>Outros</option></select>
+      </div>
+<div class="span4 actions">
+        <button type="reset" class="secondary">Limpar</button>
+        <button type="submit" class="primary">Salvar aposta</button>
+      </div>
+    </form>
+  </section>
+
+
+  <section class="card" style="margin-bottom:18px">
+    <div class="section-title"><h2>Resumo por período</h2></div>
+    <div class="perf-grid">
+      <div class="perf-box"><small>Resultado hoje</small><strong id="todayProfit">R$ 0,00</strong><div class="risk-note" id="todayUnits">0.0 un.</div></div>
+      <div class="perf-box"><small>Resultado últimos 7 dias</small><strong id="weekProfit">R$ 0,00</strong><div class="risk-note" id="weekUnits">0.0 un.</div></div>
+      <div class="perf-box"><small>Resultado no mês</small><strong id="monthProfit">R$ 0,00</strong><div class="risk-note" id="monthUnits">0.0 un.</div></div>
+    </div>
+  </section>
+
+  <section class="card" style="margin-bottom:18px">
+    <div class="section-title"><h2>Evolução da banca</h2></div>
+    <div class="chart-wrap"><canvas id="bankChart"></canvas></div>
+    <div class="footer-note">O gráfico considera banca inicial, depósitos, saques, transferências e resultados liquidados.</div>
+  </section>
+
+  <section class="card" style="margin-bottom:18px">
+    <div class="section-title"><h2>Desempenho por casa</h2></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Casa</th><th>Apostas</th><th>Greens</th><th>Reds</th><th>Acerto</th><th>Lucro/Prejuízo</th><th>ROI</th></tr></thead>
+        <tbody id="bankPerfRows"></tbody>
+      </table>
+      <div id="bankPerfEmpty" class="empty">Sem dados suficientes ainda.</div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="section-title">
+      <h2>Histórico de apostas</h2>
+      <button class="danger" onclick="clearAll()">Apagar tudo</button>
+    </div>
+    <div class="filters">
+      <select id="filterBank" onchange="render()"><option value="">Todas as casas</option></select>
+      <select id="filterResult" onchange="render()">
+        <option value="">Todos os resultados</option>
+        <option value="green">Green</option><option value="red">Red</option><option value="open">Em aberto</option><option value="void">Anulada</option>
+      </select>
+      <input id="search" oninput="render()" placeholder="Buscar jogo/mercado">
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Data</th><th>Casa</th><th>Evento</th><th>Mercado</th><th>Unid.</th><th>Stake</th><th>Odd</th><th>Resultado</th><th>Lucro/Prejuízo</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div id="empty" class="empty">Nenhuma aposta cadastrada ainda.</div>
+    </div>
+    <div class="footer-note">Depósitos e saques alteram a banca, mas não contam como lucro/prejuízo das apostas.</div>
+  </section>
+</div>
+
+<script>
+const BET_KEY='cf7_bets_v2';
+const BANK_KEY='cf7_banks_v2';
+const MOVE_KEY='cf7_moves_v2';
+const SETTINGS_KEY='cf7_settings_v1';
+
+let bets=JSON.parse(localStorage.getItem(BET_KEY)||'[]');
+let banks=JSON.parse(localStorage.getItem(BANK_KEY)||'[]');
+let moves=JSON.parse(localStorage.getItem(MOVE_KEY)||'[]');
+let settings=JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{"unitPercent":1,"maxRiskPercent":3,"monthlyGoal":0,"dailyLossLimit":0}');
+
+document.getElementById('date').value=new Date().toISOString().slice(0,10);
+const brl=v=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(v||0);
+const pct=v=>`${(v||0).toFixed(1)}%`;
+
+function pnl(b){
+  const s=Number(b.stake), o=Number(b.odd);
+  if(b.result==='green') return s*(o-1);
+  if(b.result==='red') return -s;
+  return 0;
+}
+function bankBalance(id){
+  const bank=banks.find(x=>x.id===id);
+  if(!bank) return 0;
+  let value=Number(bank.initial||0);
+  for(const m of moves){
+    if(m.type==='deposit' && m.bankId===id) value += Number(m.amount);
+    if(m.type==='withdraw' && m.bankId===id) value -= Number(m.amount);
+    if(m.type==='transfer'){
+      if(m.bankId===id) value -= Number(m.amount);
+      if(m.toBankId===id) value += Number(m.amount);
+    }
+  }
+  for(const b of bets) if(b.bankId===id) value += pnl(b);
+  return value;
+}
+function save(){
+  localStorage.setItem(BET_KEY,JSON.stringify(bets));
+  localStorage.setItem(BANK_KEY,JSON.stringify(banks));
+  localStorage.setItem(MOVE_KEY,JSON.stringify(moves));
+  localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));
+  render();
+}
+function uid(){return crypto.randomUUID ? crypto.randomUUID() : String(Date.now()+Math.random());}
+function showBankForm(){document.getElementById('bankFormWrap').style.display='block';}
+
+document.getElementById('bankForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  banks.push({id:uid(),name:bankName.value.trim(),initial:Number(bankInitial.value)});
+  e.target.reset(); document.getElementById('bankFormWrap').style.display='none'; save();
+});
+function deleteBank(id){
+  const used=bets.some(b=>b.bankId===id)||moves.some(m=>m.bankId===id||m.toBankId===id);
+  if(used){alert('Essa casa possui apostas ou movimentações e não pode ser excluída.');return;}
+  banks=banks.filter(b=>b.id!==id); save();
+}
+function toggleTransfer(){
+  document.getElementById('toBankWrap').style.display=moveType.value==='transfer'?'block':'none';
+}
+document.getElementById('moveForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  if(!banks.length){alert('Cadastre uma casa primeiro.');return;}
+  const type=moveType.value, amount=Number(moveAmount.value);
+  if(type==='transfer' && moveBank.value===moveToBank.value){alert('Escolha casas diferentes.');return;}
+  moves.push({id:uid(),type,bankId:moveBank.value,toBankId:type==='transfer'?moveToBank.value:null,amount,date:new Date().toISOString()});
+  e.target.reset(); toggleTransfer(); save();
+});
+
+document.getElementById('betForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  if(!banks.length){alert('Cadastre uma casa primeiro.');return;}
+  const bet={
+    id:uid(),date:date.value,bankId:betBank.value,event:event.value.trim(),market:market.value.trim(),
+    units:Number(units.value||0),stake:Number(stake.value),odd:Number(odd.value),result:result.value,category:category.value
+  };
+  bets.unshift(bet); save(); e.target.reset();
+  document.getElementById('date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('units').value='1';
+  recalcStakeFromUnits();
+});
+function del(id){bets=bets.filter(b=>b.id!==id);save();}
+function clearAll(){
+  if(confirm('Apagar todo o histórico de apostas? As bancas e movimentações serão mantidas.')){bets=[];save();}
+}
+function label(r){
+  if(r==='green') return '<span class="badge b-green">GREEN</span>';
+  if(r==='red') return '<span class="badge b-red">RED</span>';
+  if(r==='void') return '<span class="badge b-open">ANULADA</span>';
+  return '<span class="badge b-open">EM ABERTO</span>';
+}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function bankNameById(id){return banks.find(b=>b.id===id)?.name||'—';}
+
+
+
+
+function openEditBet(id){
+  const b=bets.find(x=>x.id===id);
+  if(!b) return;
+  document.getElementById('editBetId').value=b.id;
+  document.getElementById('editResult').value=b.result||'open';
+  document.getElementById('editOdd').value=Number(b.odd||0).toFixed(2);
+  document.getElementById('editStake').value=Number(b.stake||0).toFixed(2);
+  document.getElementById('editUnits').value=Number(b.units||1).toFixed(1);
+  document.getElementById('editEvent').value=b.event||'';
+  document.getElementById('editMarket').value=b.market||'';
+  document.getElementById('editModal').style.display='flex';
+}
+function closeEditModal(){
+  document.getElementById('editModal').style.display='none';
+}
+function saveEditBet(){
+  const id=document.getElementById('editBetId').value;
+  const idx=bets.findIndex(x=>x.id===id);
+  if(idx<0) return;
+  bets[idx].result=document.getElementById('editResult').value;
+  bets[idx].odd=Number(document.getElementById('editOdd').value||bets[idx].odd);
+  bets[idx].stake=Number(document.getElementById('editStake').value||bets[idx].stake);
+  bets[idx].units=Number(document.getElementById('editUnits').value||bets[idx].units||1);
+  bets[idx].event=document.getElementById('editEvent').value.trim();
+  bets[idx].market=document.getElementById('editMarket').value.trim();
+  closeEditModal();
+  save();
+}
+document.addEventListener('click',e=>{
+  const modal=document.getElementById('editModal');
+  if(e.target===modal) closeEditModal();
+});
+
+
+function setupScreenshotPreview(){
+  const input=document.getElementById('betScreenshot');
+  if(!input || input.dataset.bound) return;
+  input.dataset.bound='1';
+  input.addEventListener('change',()=>{
+    const file=input.files?.[0];
+    const img=document.getElementById('shotPreview');
+    if(!file){img.style.display='none';return;}
+    img.src=URL.createObjectURL(file);
+    img.style.display='block';
+  });
+}
+async function analyzeScreenshot(){
+  const input=document.getElementById('betScreenshot');
+  const file=input?.files?.[0];
+  const status=document.getElementById('aiStatus');
+  const btn=document.getElementById('analyzeShotBtn');
+  if(!file){ alert('Escolha um print primeiro.'); return; }
+  const form=new FormData();
+  form.append('image',file);
+  status.textContent='Analisando o bilhete...';
+  status.style.color='var(--yellow)';
+  btn.disabled=true;
+  try{
+    const r=await fetch('/api/analyze-bet',{method:'POST',body:form});
+    const data=await r.json();
+    if(!r.ok) throw new Error(data.detail||data.error||'Falha na análise');
+    const bankName=String(data.bookmaker||'').toLowerCase();
+    const bank=banks.find(b=>b.name.toLowerCase().includes(bankName)||bankName.includes(b.name.toLowerCase()));
+    if(bank) document.getElementById('betBank').value=bank.id;
+    if(data.event) document.getElementById('event').value=data.event;
+    if(data.market) document.getElementById('market').value=data.market;
+    if(data.stake!=null && Number(data.stake)>0) document.getElementById('stake').value=Number(data.stake).toFixed(2);
+    if(data.odd!=null && Number(data.odd)>1) document.getElementById('odd').value=Number(data.odd).toFixed(2);
+    if(data.status){
+      const map={open:'open',green:'green',red:'red',void:'void'};
+      if(map[data.status]) document.getElementById('result').value=map[data.status];
+    }
+    status.textContent='Dados lidos. Confira os campos abaixo antes de salvar.';
+    status.style.color='var(--green)';
+    validateRisk();
+    document.getElementById('event').scrollIntoView({behavior:'smooth',block:'center'});
+  }catch(e){
+    status.textContent='Não consegui ler automaticamente: '+e.message;
+    status.style.color='var(--red)';
+  }finally{
+    btn.disabled=false;
+  }
+}
+function selectedRiskBankBalance(){
+  const id=document.getElementById('riskBank')?.value || banks[0]?.id;
+  return id ? bankBalance(id) : 0;
+}
+function unitValue(){
+  return selectedRiskBankBalance() * (Number(settings.unitPercent||1)/100);
+}
+function maxRiskValue(bankId){
+  return bankBalance(bankId) * (Number(settings.maxRiskPercent||3)/100);
+}
+function refreshRiskUI(){
+  const up=document.getElementById('unitPercent');
+  const mr=document.getElementById('maxRiskPercent');
+  if(up) up.value=settings.unitPercent;
+  if(mr) mr.value=settings.maxRiskPercent;
+  const mg=document.getElementById('monthlyGoal');
+  const dl=document.getElementById('dailyLossLimit');
+  if(mg) mg.value=settings.monthlyGoal||0;
+  if(dl) dl.value=settings.dailyLossLimit||0;
+  const display=document.getElementById('unitValueDisplay');
+  if(display) display.value=brl(unitValue());
+  recalcStakeFromUnits();
+}
+function saveRiskSettings(){
+  settings.unitPercent=Number(document.getElementById('unitPercent').value||1);
+  settings.maxRiskPercent=Number(document.getElementById('maxRiskPercent').value||3);
+  settings.monthlyGoal=Number(document.getElementById('monthlyGoal').value||0);
+  settings.dailyLossLimit=Number(document.getElementById('dailyLossLimit').value||0);
+  save();
+}
+function recalcStakeFromUnits(){
+  const bankId=document.getElementById('betBank')?.value;
+  const u=Number(document.getElementById('units')?.value||1);
+  if(!bankId || !document.getElementById('stake')) return;
+  const value=bankBalance(bankId)*(Number(settings.unitPercent||1)/100)*u;
+  if(value>0) document.getElementById('stake').value=value.toFixed(2);
+  validateRisk();
+}
+function validateRisk(){
+  const bankId=document.getElementById('betBank')?.value;
+  const s=Number(document.getElementById('stake')?.value||0);
+  const alert=document.getElementById('riskAlert');
+  if(!alert || !bankId){ return; }
+  alert.style.display = s > maxRiskValue(bankId) ? 'block':'none';
+}
+function attachRiskEvents(){
+  const ids=['units','stake','betBank','riskBank','unitPercent','maxRiskPercent','monthlyGoal','dailyLossLimit'];
+  ids.forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el || el.dataset.bound) return;
+    el.dataset.bound='1';
+    el.addEventListener('input',()=>{
+      if(id==='units'||id==='betBank') recalcStakeFromUnits();
+      if(id==='stake') validateRisk();
+      if(id==='riskBank') refreshRiskUI();
+      if(id==='unitPercent'||id==='maxRiskPercent'||id==='monthlyGoal'||id==='dailyLossLimit'){
+        settings.unitPercent=Number(document.getElementById('unitPercent').value||1);
+        settings.maxRiskPercent=Number(document.getElementById('maxRiskPercent').value||3);
+        settings.monthlyGoal=Number(document.getElementById('monthlyGoal').value||0);
+        settings.dailyLossLimit=Number(document.getElementById('dailyLossLimit').value||0);
+        refreshRiskUI();
+        updateGoalAndLimits();
+      }
+    });
+    el.addEventListener('change',()=>{
+      if(id==='betBank'||id==='riskBank') refreshRiskUI();
+    });
+  });
+}
+
+function updateSelects(){
+  const options=banks.map(b=>`<option value="${b.id}">${esc(b.name)}</option>`).join('');
+  const prevBet=betBank.value, prevRisk=document.getElementById('riskBank')?.value;
+  betBank.innerHTML=options; moveBank.innerHTML=options; moveToBank.innerHTML=options;
+  filterBank.innerHTML='<option value="">Todas as casas</option>'+options;
+  const rb=document.getElementById('riskBank'); if(rb) rb.innerHTML=options;
+  if(prevBet && banks.some(b=>b.id===prevBet)) betBank.value=prevBet;
+  if(rb && prevRisk && banks.some(b=>b.id===prevRisk)) rb.value=prevRisk;
+}
+function renderBanks(){
+  bankGrid.innerHTML=banks.map(b=>{
+    const bal=bankBalance(b.id);
+    return `<div class="bank-box"><b>${esc(b.name)}</b><span>${brl(bal)}</span>
+      <div class="footer-note">Inicial: ${brl(b.initial)}</div>
+      <div style="margin-top:8px"><button class="secondary" onclick="deleteBank('${b.id}')">Excluir</button></div>
+    </div>`;
+  }).join('');
+  bankEmpty.style.display=banks.length?'none':'block';
+}
+
+function localDateStr(d=new Date()){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function profitBetween(startDate,endDate){
+  return bets.filter(b=>{
+    if(!(b.result==='green'||b.result==='red')) return false;
+    const d=new Date(b.date+'T12:00:00');
+    return d>=startDate && d<=endDate;
+  }).reduce((a,b)=>a+pnl(b),0);
+}
+
+function unitsBetween(startDate,endDate){
+  return bets.filter(b=>{
+    if(!(b.result==='green'||b.result==='red')) return false;
+    const d=new Date(b.date+'T12:00:00');
+    return d>=startDate && d<=endDate;
+  }).reduce((a,b)=>{
+    const baseUnit = Number(b.stake||0) / Math.max(Number(b.units||1),0.0001);
+    const p = pnl(b);
+    return a + (baseUnit ? p/baseUnit : 0);
+  },0);
+}
+function updateGoalAndLimits(){
+  const now=new Date();
+  const todayStart=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const todayEnd=new Date(now.getFullYear(),now.getMonth(),now.getDate(),23,59,59);
+  const monthStart=new Date(now.getFullYear(),now.getMonth(),1);
+  const monthProfit=profitBetween(monthStart,todayEnd);
+  const todayProfit=profitBetween(todayStart,todayEnd);
+
+  const goal=Number(settings.monthlyGoal||0);
+  const fill=document.getElementById('goalFill');
+  const txt=document.getElementById('goalText');
+  if(txt) txt.textContent=`${brl(monthProfit)} / ${brl(goal)}`;
+  if(fill){
+    const progress=goal>0?Math.max(0,Math.min(100,(monthProfit/goal)*100)):0;
+    fill.style.width=progress+'%';
+  }
+
+  const limit=Number(settings.dailyLossLimit||0);
+  const status=document.getElementById('dailyLimitStatus');
+  if(status){
+    if(limit<=0){
+      status.textContent='Limite diário não definido.';
+      status.style.color='var(--muted)';
+    } else if(todayProfit<=-limit){
+      status.textContent=`⚠ Limite diário atingido: ${brl(todayProfit)} hoje.`;
+      status.style.color='var(--red)';
+    } else {
+      const remaining=limit+todayProfit;
+      status.textContent=`Margem restante até o limite diário: ${brl(Math.max(0,remaining))}.`;
+      status.style.color='var(--muted)';
+    }
+  }
+}
+function updatePeriodSummary(){
+  const now=new Date();
+  const todayStart=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const todayEnd=new Date(now.getFullYear(),now.getMonth(),now.getDate(),23,59,59);
+  const weekStart=new Date(todayStart); weekStart.setDate(weekStart.getDate()-6);
+  const monthStart=new Date(now.getFullYear(),now.getMonth(),1);
+
+  const vals=[
+    ['todayProfit',profitBetween(todayStart,todayEnd)],
+    ['weekProfit',profitBetween(weekStart,todayEnd)],
+    ['monthProfit',profitBetween(monthStart,todayEnd)]
+  ];
+  vals.forEach(([id,v])=>setMetric(id,brl(v),v));
+  document.getElementById('todayUnits').textContent=unitsBetween(todayStart,todayEnd).toFixed(1)+' un.';
+  document.getElementById('weekUnits').textContent=unitsBetween(weekStart,todayEnd).toFixed(1)+' un.';
+  document.getElementById('monthUnits').textContent=unitsBetween(monthStart,todayEnd).toFixed(1)+' un.';
+  updateGoalAndLimits();
+}
+function renderBankPerformance(){
+  const rowsData=banks.map(bank=>{
+    const settled=bets.filter(b=>b.bankId===bank.id&&(b.result==='green'||b.result==='red'));
+    const stake=settled.reduce((a,b)=>a+Number(b.stake),0);
+    const profit=settled.reduce((a,b)=>a+pnl(b),0);
+    const greens=settled.filter(b=>b.result==='green').length;
+    const reds=settled.filter(b=>b.result==='red').length;
+    const hit=settled.length?greens/settled.length*100:0;
+    const roi=stake?profit/stake*100:0;
+    return {name:bank.name,total:settled.length,greens,reds,hit,profit,roi};
+  }).filter(x=>x.total>0);
+
+  bankPerfRows.innerHTML=rowsData.map(x=>`
+    <tr><td>${esc(x.name)}</td><td>${x.total}</td><td>${x.greens}</td><td>${x.reds}</td>
+    <td>${pct(x.hit)}</td><td class="${x.profit>0?'green':x.profit<0?'red':''}">${brl(x.profit)}</td>
+    <td class="${x.roi>0?'green':x.roi<0?'red':''}">${pct(x.roi)}</td></tr>`).join('');
+  bankPerfEmpty.style.display=rowsData.length?'none':'block';
+}
+function getTimelinePoints(){
+  const events=[];
+  banks.forEach(b=>events.push({date:'0000-00-00',type:'initial',amount:Number(b.initial||0),bankId:b.id}));
+  moves.forEach(m=>events.push({...m,date:(m.date||'').slice(0,10)}));
+  bets.filter(b=>b.result==='green'||b.result==='red').forEach(b=>events.push({date:b.date,type:'bet',amount:pnl(b),bankId:b.bankId}));
+
+  const realDates=events.filter(e=>e.date!=='0000-00-00').map(e=>e.date).sort();
+  const startDate=realDates[0] || localDateStr();
+  let running=banks.reduce((a,b)=>a+Number(b.initial||0),0);
+  const daily={};
+  events.filter(e=>e.date!=='0000-00-00').sort((a,b)=>a.date.localeCompare(b.date)).forEach(e=>{
+    if(e.type==='deposit') running+=Number(e.amount);
+    if(e.type==='withdraw') running-=Number(e.amount);
+    if(e.type==='bet') running+=Number(e.amount);
+    // transfer does not change total bank
+    daily[e.date]=running;
+  });
+
+  if(!daily[startDate]) daily[startDate]=running;
+  return Object.entries(daily).sort((a,b)=>a[0].localeCompare(b[0]));
+}
+function drawChart(){
+  const canvas=document.getElementById('bankChart');
+  const rect=canvas.getBoundingClientRect();
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=Math.max(300,rect.width*dpr);
+  canvas.height=Math.max(200,rect.height*dpr);
+  const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  const w=rect.width,h=rect.height;
+  ctx.clearRect(0,0,w,h);
+
+  const pts=getTimelinePoints();
+  if(!pts.length) return;
+
+  const values=pts.map(x=>x[1]);
+  let min=Math.min(...values), max=Math.max(...values);
+  if(min===max){min-=1;max+=1}
+  const padL=52,padR=14,padT=14,padB=34;
+  const cw=w-padL-padR,ch=h-padT-padB;
+
+  ctx.strokeStyle='#263242'; ctx.lineWidth=1;
+  for(let i=0;i<4;i++){
+    const y=padT+(ch/3)*i;
+    ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(w-padR,y);ctx.stroke();
+    const val=max-(max-min)*(i/3);
+    ctx.fillStyle='#8fa1b5';ctx.font='11px Arial';ctx.fillText(brl(val).replace('R$ ',''),4,y+4);
+  }
+
+  const xAt=i=>padL+(pts.length===1?cw/2:(cw*i/(pts.length-1)));
+  const yAt=v=>padT+ch-(v-min)/(max-min)*ch;
+
+  ctx.strokeStyle='#29d17d';ctx.lineWidth=2.5;ctx.beginPath();
+  pts.forEach((p,i)=>{const x=xAt(i),y=yAt(p[1]);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.stroke();
+
+  ctx.fillStyle='#eef4fb';
+  pts.forEach((p,i)=>{const x=xAt(i),y=yAt(p[1]);ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill()});
+
+  ctx.fillStyle='#8fa1b5';ctx.font='11px Arial';
+  const first=pts[0][0].split('-').reverse().slice(0,2).join('/');
+  const last=pts[pts.length-1][0].split('-').reverse().slice(0,2).join('/');
+  ctx.fillText(first,padL,h-10);
+  const tw=ctx.measureText(last).width;ctx.fillText(last,w-padR-tw,h-10);
+}
+window.addEventListener('resize',()=>setTimeout(drawChart,80));
+
+function render(){
+  updateSelects(); renderBanks(); updatePeriodSummary(); renderBankPerformance(); refreshRiskUI(); attachRiskEvents(); setupScreenshotPreview(); updateGoalAndLimits(); setTimeout(drawChart,0);
+
+  const fr=filterResult.value, fb=filterBank.value, q=search.value.toLowerCase();
+  const list=bets.filter(b=>(!fr||b.result===fr)&&(!fb||b.bankId===fb)&&(!q||(`${b.event} ${b.market}`).toLowerCase().includes(q)));
+  rows.innerHTML=list.map(b=>{
+    const p=pnl(b), cls=p>0?'green':p<0?'red':'';
+    return `<tr>
+      <td>${b.date.split('-').reverse().join('/')}</td><td>${esc(bankNameById(b.bankId))}</td>
+      <td>${esc(b.event)}</td><td>${esc(b.market)}</td><td>${Number(b.units||0).toFixed(1)}</td><td>${brl(b.stake)}</td>
+      <td>${Number(b.odd).toFixed(2)}</td><td>${label(b.result)}</td><td class="${cls}">${brl(p)}</td>
+      <td>
+        <button class="secondary" onclick="openEditBet('${b.id}')">Editar/Finalizar</button>
+        <button class="secondary" onclick="del('${b.id}')">Excluir</button>
+      </td>
+    </tr>`;
+  }).join('');
+  empty.style.display=list.length?'none':'block';
+
+  const settled=bets.filter(b=>b.result==='green'||b.result==='red');
+  const totalStake=settled.reduce((a,b)=>a+Number(b.stake),0);
+  const profit=settled.reduce((a,b)=>a+pnl(b),0);
+  const wins=settled.filter(b=>b.result==='green').length;
+  const hit=settled.length?wins/settled.length*100:0;
+  const roi=totalStake?profit/totalStake*100:0;
+  const totalBank=banks.reduce((a,b)=>a+bankBalance(b.id),0);
+
+  setMetric('bankTotal',brl(totalBank),totalBank);
+  setMetric('saldo',brl(profit),profit);
+  apostado.textContent=brl(totalStake); hitEl=document.getElementById('hit'); hitEl.textContent=pct(hit);
+  setMetric('roi',pct(roi),roi);
+}
+function setMetric(id,text,val){
+  const el=document.getElementById(id);el.textContent=text;el.classList.remove('green','red');
+  if(val>0)el.classList.add('green'); if(val<0)el.classList.add('red');
+}
+function exportCSV(){
+  const head=['Data','Casa','Evento','Mercado','Unidades','Stake','Odd','Resultado','Lucro/Prejuízo'];
+  const data=bets.map(b=>[b.date,bankNameById(b.bankId),b.event,b.market,b.units||0,b.stake,b.odd,b.result,pnl(b).toFixed(2)]);
+  const csv=[head,...data].map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(';')).join('\n');
+  const blob=new Blob(["\ufeff"+csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='cf7_apostas_v2.csv';a.click();URL.revokeObjectURL(a.href);
+}
+render();
+</script>
+
+<div id="editModal" class="modal">
+  <div class="modal-card">
+    <h3>Editar / Finalizar aposta</h3>
+    <input type="hidden" id="editBetId">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div><label>Resultado</label>
+        <select id="editResult">
+          <option value="open">Em aberto</option>
+          <option value="green">Green</option>
+          <option value="red">Red</option>
+          <option value="void">Anulada</option>
+        </select>
+      </div>
+      <div><label>Odd</label><input id="editOdd" type="number" min="1.01" step="0.01"></div>
+      <div><label>Stake (R$)</label><input id="editStake" type="number" min="0.01" step="0.01"></div>
+      <div><label>Unidades</label><input id="editUnits" type="number" min="0.1" step="0.1"></div>
+      <div style="grid-column:1/-1"><label>Evento / Jogo</label><input id="editEvent"></div>
+      <div style="grid-column:1/-1"><label>Mercado</label><input id="editMarket"></div>
+    </div>
+    <div class="actions" style="margin-top:14px">
+      <button class="secondary" type="button" onclick="closeEditModal()">Cancelar</button>
+      <button class="primary" type="button" onclick="saveEditBet()">Salvar alterações</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
